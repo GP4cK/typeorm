@@ -288,10 +288,68 @@ await dataSource.transaction(async (manager) => {
 - Repository methods are async; always use `await`
 - Entity instances should be plain objects, not class instances with methods (Data Mapper pattern)
 
+## v1.0 Breaking Changes
+
+TypeORM v1.0 introduced several breaking changes. Always use the new APIs:
+
+### `select` must use object syntax
+
+The deprecated string-array syntax for `select` has been removed. Always use the object syntax:
+
+```typescript
+// ❌ Removed — throws at runtime
+const users = await repository.find({
+    select: ["id", "name"],
+})
+
+// ✅ Correct
+const users = await repository.find({
+    select: { id: true, name: true },
+})
+```
+
+### `join` option removed — use `relations`
+
+The `join` find option has been removed. Use `relations` for left joins with selection:
+
+```typescript
+// ❌ Removed
+const posts = await repository.find({
+    join: { alias: "post", leftJoinAndSelect: { categories: "post.categories" } },
+})
+
+// ✅ Correct
+const posts = await repository.find({
+    relations: { categories: true },
+})
+```
+
+For `innerJoin` or `leftJoin` without selection, use QueryBuilder instead.
+
+### SQLite driver change
+
+`sqlite3` has been replaced by `better-sqlite3`. Update your DataSource type:
+
+```typescript
+// ❌ No longer supported
+new DataSource({ type: "sqlite", database: "db.sqlite" })
+
+// ✅ Correct
+new DataSource({ type: "better-sqlite3", database: "db.sqlite" })
+```
+
+### Node.js version requirement
+
+TypeORM v1.0 requires **Node.js 20 or later**.
+
+See the full [v1 migration guide](../docs/docs/guides/8-migration-v1.md) for all breaking changes.
+
 ## Resources
 
 - [Main Documentation](https://typeorm.io)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Developer Guide](../DEVELOPER.md)
+- [v1 Migration Guide](../docs/docs/guides/8-migration-v1.md)
+- [v1 Release Notes](../docs/docs/guides/9-release-notes-v1.md)
 - [GitHub Repository](https://github.com/typeorm/typeorm)
 - [Issue Tracker](https://github.com/typeorm/typeorm/issues)
